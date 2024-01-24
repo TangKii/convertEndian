@@ -12,12 +12,9 @@ void convertEndian(uint8_t *data, int numBytes) {
 }
 
 void printHelp() {
-    printf("Usage: your_program [-i input_file] [-o output_file] [-n numBytes] [-help]\n");
+    printf("\nconvertEndian [-n numBytes] input_file output_file\n");
     printf("Options:\n");
-    printf("  -i   Input file name (default: input.bin)\n");
-    printf("  -o   Output file name (default: output.bin)\n");
-    printf("  -n   Number of bytes for endian conversion (default: 4)\n");
-    printf("  -help   Display this help message\n");
+    printf("  -n   Number of bytes for endian conversion (default: 8)\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -26,33 +23,34 @@ int main(int argc, char *argv[]) {
     int numBytes = 8;
 
     // 解析命令行参数
-    for (int i = 1; i < argc; ++i) {
-        if (strcmp(argv[i], "-i") == 0 && i + 1 < argc) {
-            inputFileName = argv[i + 1];
-            i++;
-        } else if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
-            outputFileName = argv[i + 1];
-            i++;
-        } else if (strcmp(argv[i], "-n") == 0 && i + 1 < argc) {
-            numBytes = atoi(argv[i + 1]);
+    if(argc == 3) {
+        inputFileName = argv[1];
+        outputFileName = argv[2];
+    }
+    else if(argc == 5) {
 
-            // 检查 numBytes 是否是 2 的偶数
-            if (numBytes < 2 || numBytes % 2 != 0) {
-                printf("Error: numBytes must be at least 2 and an even number.\n");
-                return 1;
-            }
-
-            i++;
-        } else if (strcmp(argv[i], "-help") == 0) {
+        if (strcmp(argv[1], "-n") == 0) {
+            numBytes = atoi(argv[2]);
+        }
+        else {
             printHelp();
             return 0;
         }
-    }
 
-    if (numBytes <= 0) {
-        printf("Error: numBytes must be greater than 0.\n");
-        return 1;
+        inputFileName = argv[3];
+        outputFileName = argv[4];
+
+        // 检查 numBytes 是否是 2 的偶数
+        if (numBytes < 2 || numBytes % 2 != 0) {
+            printf("Error: numBytes must be at least 2 and an even number.\n");
+            return 1;
+        }
     }
+    else {
+        printHelp();
+        return 0;
+    }
+    //printf("inputfile: %s, outputfile %s, numBytes %d\n",inputFileName, outputFileName,numBytes);
 
     FILE *inputFile, *outputFile;
     inputFile = fopen(inputFileName, "rb");
@@ -69,22 +67,25 @@ int main(int argc, char *argv[]) {
     fseek(inputFile, 0, SEEK_SET);
 
     // 计算需要读取的整数倍大小
-    long readSize = (fileSize / numBytes) * numBytes;
+    long alignSize = (fileSize / numBytes) * numBytes;
+    long leftover = fileSize - alignSize;
 
+    //printf("file align ize %d, file leftover size %d\n",alignSize, leftover);
     // 读取整个文件内容
-    uint8_t *fileBuffer = malloc(readSize);
-    fread(fileBuffer, 1, readSize, inputFile);
+    uint8_t *fileBuffer = malloc(fileSize);
+    fread(fileBuffer, 1, fileSize, inputFile);
 
     // 关闭输入文件
     fclose(inputFile);
 
     // 进行大小端转换
-    for (long i = 0; i < readSize; i += numBytes) {
+    for (long i = 0; i < alignSize; i += numBytes) {
         convertEndian(fileBuffer + i, numBytes);
     }
+    convertEndian(fileBuffer + alignSize, leftover);
 
     // 将转换后的数据写入输出文件
-    fwrite(fileBuffer, 1, readSize, outputFile);
+    fwrite(fileBuffer, 1, fileSize, outputFile);
 
     // 关闭输出文件
     fclose(outputFile);
