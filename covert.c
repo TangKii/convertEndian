@@ -23,7 +23,7 @@ void printHelp() {
 int main(int argc, char *argv[]) {
     const char *inputFileName = "input.bin";
     const char *outputFileName = "output.bin";
-    int numBytes = 4;
+    int numBytes = 8;
 
     // 解析命令行参数
     for (int i = 1; i < argc; ++i) {
