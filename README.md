@@ -2,7 +2,7 @@
 
 convertEndian
 
-## ow to build
+## How to build
 
 - For MinGW
 `mkdir build`
