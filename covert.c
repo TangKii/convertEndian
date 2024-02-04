@@ -2,8 +2,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-void convertEndian(uint8_t *data, int numBytes) {
+void convertEndian(uint8_t *data, int numBytes) 
+{
     for (int i = 0; i < numBytes / 2; ++i) {
         uint8_t temp = data[i];
         data[i] = data[numBytes - 1 - i];
@@ -11,45 +13,56 @@ void convertEndian(uint8_t *data, int numBytes) {
     }
 }
 
-void printHelp() {
-    printf("\nconvertEndian [-n numBytes] input_file output_file\n");
+void printHelp() 
+{
+    printf("convertEndian [-n numBytes] input_file output_file\n");
     printf("Options:\n");
     printf("  -n   Number of bytes for endian conversion (default: 8)\n");
 }
 
-int main(int argc, char *argv[]) {
-    const char *inputFileName = "input.bin";
-    const char *outputFileName = "output.bin";
+int main(int argc, char *argv[]) 
+{
+
+    const char *inputFileName = "";
+    const char *outputFileName = "";
     int numBytes = 8;
 
-    // 解析命令行参数
-    if(argc == 3) {
-        inputFileName = argv[1];
-        outputFileName = argv[2];
-    }
-    else if(argc == 5) {
-
-        if (strcmp(argv[1], "-n") == 0) {
-            numBytes = atoi(argv[2]);
-        }
-        else {
-            printHelp();
-            return 0;
-        }
-
-        inputFileName = argv[3];
-        outputFileName = argv[4];
-
-        // 检查 numBytes 是否是 2 的偶数
-        if (numBytes < 2 || numBytes % 2 != 0) {
-            printf("Error: numBytes must be at least 2 and an even number.\n");
-            return 1;
-        }
-    }
-    else {
+  if (argc == 1) {
         printHelp();
-        return 0;
+        return 1;
     }
+
+    int opt;
+    while ((opt = getopt(argc, argv, "n:")) != -1) {
+        switch (opt) {
+            case 'n':
+                numBytes = atoi(optarg);
+                break;
+            default:
+                // 处理其他情况
+                printHelp();
+                return 1;
+        }
+    }
+
+    if (argc - optind != 2)
+    {
+        printHelp();
+        return 1;
+    }
+
+    // 解析命令行参数
+    if (optind < argc) {
+        inputFileName = argv[optind];
+        outputFileName = argv[optind+1];
+    }
+
+    // 检查 numBytes 是否是 2 的偶数
+    if (numBytes < 2 || numBytes % 2 != 0) {
+        printf("Error: numBytes must be at least 2 and an even number.\n");
+        return 1;
+    }
+
     //printf("inputfile: %s, outputfile %s, numBytes %d\n",inputFileName, outputFileName,numBytes);
 
     FILE *inputFile, *outputFile;
